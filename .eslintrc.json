@@ -1,0 +1,45 @@
+{
+  "env": {
+    "browser": true,
+    "es2021": true
+  },
+  "plugins": ["solid"],
+  "parser": "@typescript-eslint/parser", // if not already added
+  "extends": ["eslint:recommended", "plugin:solid/typescript", "prettier"],
+  "parserOptions": {
+    "ecmaVersion": "latest",
+    "sourceType": "module"
+  },
+  "rules": {},
+  "overrides": [
+    {
+      "extends": ["plugin:@typescript-eslint/recommended"],
+      "files": ["**/*.ts", "**/*.tsx"],
+      "rules": {
+        // formatting, unncessary since prettier takes care already
+        // "indent": ["error", 2],
+        "linebreak-style": "off",
+        "quotes": ["error", "double"],
+        "semi": ["error", "never"],
+        // eslint typescript stuff
+        "@typescript-eslint/no-unused-vars": "warn", // TODO change to error during production
+        "@typescript-eslint/consistent-type-imports": "error", // Ensure `import type` is used when it's necessary
+        "@typescript-eslint/no-empty-interface": "warn",
+
+        "no-var": "warn", // sometimes need this
+        "no-console": "warn",
+        "sort-imports": [
+          // default
+          "error",
+          {
+            "ignoreCase": false,
+            "ignoreDeclarationSort": true,
+            "ignoreMemberSort": false,
+            "memberSyntaxSortOrder": ["none", "all", "multiple", "single"],
+            "allowSeparatedGroups": true
+          }
+        ]
+      }
+    }
+  ]
+}
