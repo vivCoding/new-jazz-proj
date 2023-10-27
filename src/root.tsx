@@ -14,6 +14,7 @@ import {
   useLocation,
 } from "solid-start"
 import "./root.css"
+import { signIn, signOut } from "@auth/solid-start/client"
 
 import "@fontsource/poppins/100.css"
 import "@fontsource/poppins/200.css"
@@ -24,6 +25,7 @@ import "@fontsource/poppins/600.css"
 import "@fontsource/poppins/700.css"
 import "@fontsource/poppins/800.css"
 import "@fontsource/poppins/900.css"
+import { useSession } from "./hooks/useSession"
 
 export default function Root() {
   const location = useLocation()
@@ -31,6 +33,11 @@ export default function Root() {
     path == location.pathname
       ? "border-sky-600"
       : "border-transparent hover:border-sky-600"
+  const currSession = useSession()
+  const loggedIn = () => currSession() !== null && currSession() !== undefined
+
+  // console.log(currSession(), loggedIn())
+
   return (
     <Html lang="en">
       <Head>
@@ -48,6 +55,26 @@ export default function Root() {
                 </li>
                 <li class={`border-b-2 ${active("/about")} mx-1.5 sm:mx-6`}>
                   <A href="/about">About</A>
+                </li>
+                <li class={`border-b-2 ${active("/todo")} mx-1.5 sm:mx-6`}>
+                  <A href="/todo">Todo</A>
+                </li>
+                <li class="ml-auto">
+                  {loggedIn() ? (
+                    <button
+                      onClick={() => signOut()}
+                      class="rounded bg-sky-600 px-3 py-2"
+                    >
+                      Sign Out
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => signIn()}
+                      class="rounded bg-sky-600 px-3 py-2"
+                    >
+                      Sign in
+                    </button>
+                  )}
                 </li>
               </ul>
             </nav>

@@ -1,5 +1,6 @@
 import { A } from "solid-start"
 import Counter from "~/components/Counter"
+import { signIn } from "@auth/solid-start/client"
 
 export default function Home() {
   return (

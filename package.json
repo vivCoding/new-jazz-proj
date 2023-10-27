@@ -12,6 +12,8 @@
     "prettier:fix": "prettier src --write"
   },
   "dependencies": {
+    "@auth/core": "^0.18.0",
+    "@auth/solid-start": "^0.1.2",
     "@fontsource/poppins": "^5.0.8",
     "@solidjs/meta": "^0.28.6",
     "@solidjs/router": "^0.8.3",
@@ -20,6 +22,7 @@
     "solid-start": "^0.3.8"
   },
   "devDependencies": {
+    "@types/node": "^20.8.9",
     "@typescript-eslint/eslint-plugin": "^6.9.0",
     "@typescript-eslint/parser": "^6.9.0",
     "autoprefixer": "^10.4.15",
