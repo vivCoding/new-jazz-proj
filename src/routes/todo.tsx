@@ -1,4 +1,4 @@
-import { For, Index, createEffect, createMemo, createSignal } from "solid-js"
+import { For, createMemo, createSignal } from "solid-js"
 
 export default function Nice() {
   const [newItem, setNewItem] = createSignal("")

@@ -74,6 +74,12 @@ export default function Root() {
                     >
                       Sign in
                     </button>
+                    // <A
+                    //   href="/account/signIn"
+                    //   class="inline-block rounded bg-sky-600 px-3 py-2 hover:cursor-pointer"
+                    // >
+                    //   Sign in
+                    // </A>
                   )}
                 </li>
               </ul>
