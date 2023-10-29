@@ -7,10 +7,13 @@ import vercel from "solid-start-vercel"
 export default defineConfig({
   plugins: [
     solid({
-      adapter: vercel({ edge: false }),
+      experimental: {
+        islands: false,
+      },
+      adapter: vercel(),
     }),
   ],
-  ssr: {
-    external: ["@auth/typeorm-adapter"],
-  },
+  // ssr: {
+  //   external: ["@auth/typeorm-adapter", "typeorm", "pg"],
+  // },
 })
