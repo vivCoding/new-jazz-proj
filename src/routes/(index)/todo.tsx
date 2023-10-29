@@ -1,6 +1,7 @@
 import { For, createMemo, createSignal } from "solid-js"
+import Protected from "~/components/Protected"
 
-export default function Nice() {
+const TodoComp = () => {
   const [newItem, setNewItem] = createSignal("")
   const [currId, setCurrId] = createSignal(0)
   const [items, setItems] = createSignal<
@@ -67,3 +68,12 @@ export default function Nice() {
     </main>
   )
 }
+
+const Todo = () => (
+  <Protected>
+    <TodoComp />
+  </Protected>
+)
+
+// export default Todo
+export default Todo
