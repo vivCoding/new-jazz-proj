@@ -13,7 +13,4 @@ export default defineConfig({
   ssr: {
     external: ["@auth/typeorm-adapter"],
   },
-  build: {
-    outDir: "./dist",
-  },
 })
