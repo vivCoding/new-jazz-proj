@@ -1,10 +1,7 @@
 import { signIn, signOut } from "@auth/solid-start/client"
-import { A, Outlet, useLocation, useRouteData } from "solid-start"
+import { Show } from "solid-js"
+import { A, Outlet, useLocation } from "solid-start"
 import { useSession } from "~/hooks/useSession"
-
-export const routeData = () => {
-  return useSession()
-}
 
 export default function IndexLayout() {
   const location = useLocation()
@@ -13,7 +10,7 @@ export default function IndexLayout() {
       ? "border-sky-600"
       : "border-transparent hover:border-sky-600"
 
-  const currSession = useRouteData<typeof routeData>()
+  const currSession = useSession()
   const loggedIn = () => currSession() !== null && currSession() !== undefined
 
   return (
@@ -26,11 +23,11 @@ export default function IndexLayout() {
           <li class={`border-b-2 ${active("/about")} mx-1.5 sm:mx-6`}>
             <A href="/about">About</A>
           </li>
-          {loggedIn() && (
+          <Show when={loggedIn()}>
             <li class={`border-b-2 ${active("/todo")} mx-1.5 sm:mx-6`}>
               <A href="/todo">Todo</A>
             </li>
-          )}
+          </Show>
           <li class="ml-auto">
             {loggedIn() ? (
               <>

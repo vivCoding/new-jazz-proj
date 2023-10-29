@@ -10,7 +10,4 @@ export default defineConfig({
       adapter: vercel(),
     }),
   ],
-  // ssr: {
-  //   external: ["@auth/typeorm-adapter", "typeorm", "pg"],
-  // },
 })
