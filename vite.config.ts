@@ -7,9 +7,6 @@ import vercel from "solid-start-vercel"
 export default defineConfig({
   plugins: [
     solid({
-      experimental: {
-        islands: false,
-      },
       adapter: vercel(),
     }),
   ],
