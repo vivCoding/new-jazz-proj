@@ -3,7 +3,7 @@
   "type": "module",
   "scripts": {
     "dev": "solid-start dev",
-    "build": "solid-start build",
+    "build": "prisma generae && solid-start build",
     "start": "solid-start start",
     "start:prod": "pm2 start pnpm -- start",
     "lint": "eslint src",
