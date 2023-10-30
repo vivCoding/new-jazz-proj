@@ -1,14 +1,11 @@
-import { redirect } from "solid-start"
-import { getSession } from "@auth/solid-start"
+import "reflect-metadata"
 import {
   StartServer,
   createHandler,
   renderAsync,
 } from "solid-start/entry-server"
-import { authOpts } from "./routes/api/auth/[...solidauth]"
-import { getToken } from "@auth/core/jwt"
 
-const protectedPaths = [/^\/todo(\/(.*))*$/]
+// const protectedPaths = [/^\/todo(\/(.*))*$/]
 
 // NOTE middleware doesn't work for internal routing
 // https://github.com/solidjs/solid-start/issues/949
