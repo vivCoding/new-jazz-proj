@@ -3,13 +3,14 @@
   "type": "module",
   "scripts": {
     "dev": "solid-start dev",
-    "build": "prisma generate && solid-start build",
+    "build": "solid-start build",
     "start": "solid-start start",
     "start:prod": "pm2 start pnpm -- start",
     "lint": "eslint src",
     "lint:fix": "eslint src --fix",
     "prettier": "prettier src --check",
-    "prettier:fix": "prettier src --write"
+    "prettier:fix": "prettier src --write",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@auth/core": "^0.18.0",
