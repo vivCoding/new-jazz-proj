@@ -2,7 +2,7 @@
   "name": "mytank",
   "type": "module",
   "scripts": {
-    "dev": "solid-start dev",
+    "dev": "prisma generate && solid-start dev",
     "build": "solid-start build",
     "start": "solid-start start",
     "start:prod": "pm2 start pnpm -- start",
