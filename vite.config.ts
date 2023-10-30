@@ -1,7 +1,5 @@
 import solid from "solid-start/vite"
 import { defineConfig } from "vite"
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
 import vercel from "solid-start-vercel"
 
 export default defineConfig({
@@ -10,4 +8,7 @@ export default defineConfig({
       adapter: vercel(),
     }),
   ],
+  ssr: {
+    external: ["@prisma/client"],
+  },
 })

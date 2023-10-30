@@ -5,8 +5,6 @@ import prisma from "~/util/store/dbConnect"
 import { PrismaAdapter } from "@auth/prisma-adapter"
 
 export const authOpts: SolidAuthConfig = {
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
   adapter: PrismaAdapter(prisma),
   providers: [
     GoogleProvider({
