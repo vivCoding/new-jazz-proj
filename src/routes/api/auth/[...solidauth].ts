@@ -15,6 +15,23 @@ export const authOpts: SolidAuthConfig = {
   session: {
     strategy: "jwt",
   },
+  callbacks: {
+    async session({ session, token }) {
+      if (session && session.user) {
+        session.user.id = token.id as string
+      }
+      return session
+    },
+    async jwt({ token, account, user }) {
+      if (user) {
+        token.id = user.id
+      }
+      if (account) {
+        token.accessToken = account.access_token
+      }
+      return token
+    },
+  },
 }
 
 export const { GET, POST } = SolidAuth(authOpts)

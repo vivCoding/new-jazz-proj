@@ -1,5 +1,22 @@
 /// <reference types="solid-start/env" />
 
+import type { User } from "@prisma/client"
+
+declare module "@auth/core" {
+  interface Session {
+    user: User
+    accessToken?: string
+  }
+}
+
+declare module "@auth/core/jwt" {
+  interface JWT {
+    id?: string
+    accessToken?: string
+  }
+}
+
+/*
 // interface IUser {
 //   id: string
 //   name: string
@@ -25,3 +42,4 @@
 //   mpg: number
 //   costPerMile: number
 // }
+*/

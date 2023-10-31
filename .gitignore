@@ -28,4 +28,3 @@ gitignore
 Thumbs.db
 
 prisma/migrations
-src/generated

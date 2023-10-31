@@ -11,6 +11,7 @@ import {
   Scripts,
   Title,
 } from "solid-start"
+import { Toaster } from "solid-toast"
 import "./root.css"
 
 import "@fontsource/poppins/100.css"
@@ -34,6 +35,7 @@ export default function Root() {
       <Body>
         <Suspense>
           <ErrorBoundary>
+            <Toaster />
             <Routes>
               <FileRoutes />
             </Routes>

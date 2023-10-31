@@ -5,7 +5,6 @@ datasource db {
 
 generator client {
   provider = "prisma-client-js"
-  // output   = "../src/generated/prisma"
 }
 
 model Account {
@@ -55,7 +54,7 @@ model User {
   image         String?
   accounts      Account[]
   sessions      Session[]
-  Car           Car[]
+  cars          Car[]
 
   @@map("users")
 }
@@ -66,7 +65,7 @@ model Car {
   description String
   userId      String
   user        User     @relation(fields: [userId], references: [id])
-  Refuel      Refuel[]
+  refuels     Refuel[]
 
   @@map("cars")
 }
