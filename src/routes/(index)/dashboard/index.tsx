@@ -1,7 +1,7 @@
 import { getSession } from "@auth/solid-start"
 import type { Car } from "@prisma/client"
 import { For, Show, createSignal } from "solid-js"
-import { useRouteData } from "solid-start"
+import { A, useRouteData } from "solid-start"
 import { createServerAction$, createServerData$ } from "solid-start/server"
 import Protected from "~/components/Protected"
 import {
@@ -12,6 +12,7 @@ import {
 import { authOpts } from "~/routes/api/auth/[...solidauth]"
 import to from "await-to-js"
 import toast from "solid-toast"
+import { useNavigate } from "@solidjs/router"
 
 export function routeData() {
   return createServerData$(async (_, { request }) => {
@@ -27,6 +28,7 @@ export default function Dashboard() {
   const [newCarDesc, setNewCarDesc] = createSignal("")
 
   const cars = useRouteData<typeof routeData>()
+  const navigate = useNavigate()
 
   const [addStatus, addNew] = createServerAction$(
     async (newCar: Omit<Car, "id" | "userId">, { request }) => {
@@ -79,7 +81,7 @@ export default function Dashboard() {
     }
   }
 
-  if (cars() && cars()?.err) {
+  if (cars() && (cars()?.err || !cars()?.res)) {
     toast.error("Could not load cars and refuel info 😭")
   }
 
@@ -101,7 +103,13 @@ export default function Dashboard() {
           </Show>
           <For each={cars()?.res}>
             {(car) => (
-              <div class="my-2 flex flex-row items-center justify-between rounded bg-slate-200 p-4">
+              <A
+                class="my-2 flex flex-row items-center justify-between rounded bg-slate-200 p-4 transition hover:cursor-pointer hover:bg-slate-300"
+                href={`/car/${car.id}`}
+                onClick={(e) => {
+                  if (e.target !== e.currentTarget) e.preventDefault()
+                }}
+              >
                 <div>
                   <h3 class="text-lg font-medium">{car.name}</h3>
                   <h3 class="font-light italic">{car.description}</h3>
@@ -109,15 +117,47 @@ export default function Dashboard() {
                 <button
                   class="rounded bg-red-500 p-2 text-white transition enabled:hover:bg-red-800 disabled:opacity-60 disabled:hover:cursor-not-allowed"
                   onClick={() => handleDeleteCar(car.id)}
+                  title="Delete car"
                   disabled={
                     deleteStatus.pending && deleteStatus.input === car.id
                   }
                 >
-                  {deleteStatus.pending && deleteStatus.input === car.id
-                    ? "Deleting..."
-                    : "Delete"}
+                  {deleteStatus.pending && deleteStatus.input === car.id ? (
+                    <svg
+                      class="animate-spin"
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                    </svg>
+                  ) : (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="M3 6h18" />
+                      <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                      <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                      <line x1="10" x2="10" y1="11" y2="17" />
+                      <line x1="14" x2="14" y1="11" y2="17" />
+                    </svg>
+                  )}
                 </button>
-              </div>
+              </A>
             )}
           </For>
         </div>

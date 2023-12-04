@@ -76,8 +76,8 @@ model Refuel {
   gallons     Int
   gallonPrice Int
   milesDriven Int
-  mpg         Int
-  costPerMile Int
+  mpg         Int      @default(0)
+  costPerMile Int      @default(0)
   carId       String
   car         Car      @relation(fields: [carId], references: [id])
 

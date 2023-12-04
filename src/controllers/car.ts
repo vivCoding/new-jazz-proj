@@ -12,6 +12,17 @@ export const getCarsFromUser = (userId: string) =>
     },
   })
 
+export const getCarById = (carId: string) =>
+  prisma.car.findFirst({
+    where: {
+      id: carId,
+    },
+    include: {
+      user: true,
+      refuels: true,
+    },
+  })
+
 export const addCar = (data: Omit<Car, "id">) =>
   prisma.car.create({
     data,

@@ -10,7 +10,7 @@
     "lint:fix": "eslint src --fix",
     "prettier": "prettier src --check",
     "prettier:fix": "prettier src --write",
-    "postinstall": "prisma generate"
+    "prisma:generate": "prisma generate"
   },
   "dependencies": {
     "@auth/core": "^0.18.0",
