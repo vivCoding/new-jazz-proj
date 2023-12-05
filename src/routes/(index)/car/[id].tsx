@@ -4,6 +4,7 @@ import { For, Show, createSignal } from "solid-js"
 import { useParams, useRouteData } from "solid-start"
 import { createServerAction$, createServerData$ } from "solid-start/server"
 import toast from "solid-toast"
+import Protected from "~/components/Protected"
 import { getCarById } from "~/controllers/car"
 import {
   addRefuel as addRefuelDb,
@@ -15,11 +16,6 @@ export function routeData() {
   return createServerData$(
     async (id) => {
       const [err, res] = await to(getCarById(id))
-      if (res) {
-        res.refuels.sort(
-          (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
-        )
-      }
       return { err, res }
     },
     { key: () => params.id }
@@ -39,16 +35,15 @@ export default function CarPage() {
     async (newRefuel: Omit<Refuel, "id" | "mpg" | "costPerMile">) => {
       console.log("adding new refuel")
       const [err, res] = await to(addRefuelDb({ ...newRefuel }))
-      console.log("added")
-      // if (err || !res) throw err
+      if (err || !res) throw err
     }
   )
 
   const [deleteStatus, deleteRefuel] = createServerAction$(
     async (refuelId: string) => {
-      console.log("deleting a car")
+      console.log("deleting a refuel")
       const [err, res] = await to(deleteRefuelDb(refuelId))
-      // if (err || !res) throw err
+      if (err || !res) throw err
     }
   )
 
@@ -97,7 +92,7 @@ export default function CarPage() {
   }
 
   return (
-    <>
+    <Protected>
       <main class="p-14 text-gray-700">
         <div class="flex flex-row items-center justify-between">
           <div>
@@ -119,32 +114,43 @@ export default function CarPage() {
                   <h3>Date</h3>
                 </th>
                 <th class="border-2 border-solid border-white bg-slate-300 p-2 font-normal">
-                  <h3>Gallons</h3>
+                  <h3>Price/Gallon</h3>
                 </th>
                 <th class="border-2 border-solid border-white bg-slate-300 p-2 font-normal">
-                  <h3>Price/Gallon</h3>
+                  <h3>Gallons</h3>
                 </th>
                 <th class="border-2 border-solid border-white bg-slate-300 p-2 font-normal">
                   <h3>Miles Driven</h3>
                 </th>
+                <th class="border-2 border-solid border-white bg-slate-300 p-2 font-normal">
+                  <h3>MPG</h3>
+                </th>
+                <th class="border-2 border-solid border-white bg-slate-300 p-2 font-normal">
+                  <h3>Cost/Mile</h3>
+                </th>
                 <th class="w-0"> </th>
               </tr>
             </thead>
-            <For
-              each={car()?.res?.refuels.sort(
-                (a, b) =>
-                  new Date(a.date).getTime() - new Date(b.date).getTime()
-              )}
-            >
-              {({ id: refuelId, date, gallons, gallonPrice, milesDriven }) => (
+            <For each={car()?.res?.refuels}>
+              {({
+                id: refuelId,
+                date,
+                gallons,
+                gallonPrice,
+                milesDriven,
+                mpg,
+                costPerMile,
+              }) => (
                 <>
                   <tr>
                     <td class=" border-2 border-gray-200 p-1">
                       {new Date(date).toLocaleDateString()}
                     </td>
-                    <td class=" border-2 border-gray-200 p-1">{gallons}</td>
                     <td class=" border-2 border-gray-200 p-1">{gallonPrice}</td>
+                    <td class=" border-2 border-gray-200 p-1">{gallons}</td>
                     <td class=" border-2 border-gray-200 p-1">{milesDriven}</td>
+                    <td class=" border-2 border-gray-200 p-1">{mpg}</td>
+                    <td class=" border-2 border-gray-200 p-1">{costPerMile}</td>
                     <td class="inline">
                       <button
                         class="m-1 rounded bg-red-500 p-2 text-white transition enabled:hover:bg-red-800 disabled:opacity-60 disabled:hover:cursor-not-allowed"
@@ -284,6 +290,6 @@ export default function CarPage() {
           </div>
         </div>
       </Show>
-    </>
+    </Protected>
   )
 }

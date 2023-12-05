@@ -12,7 +12,6 @@ import {
 import { authOpts } from "~/routes/api/auth/[...solidauth]"
 import to from "await-to-js"
 import toast from "solid-toast"
-import { useNavigate } from "@solidjs/router"
 
 export function routeData() {
   return createServerData$(async (_, { request }) => {
@@ -28,7 +27,6 @@ export default function Dashboard() {
   const [newCarDesc, setNewCarDesc] = createSignal("")
 
   const cars = useRouteData<typeof routeData>()
-  const navigate = useNavigate()
 
   const [addStatus, addNew] = createServerAction$(
     async (newCar: Omit<Car, "id" | "userId">, { request }) => {

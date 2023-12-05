@@ -35,7 +35,7 @@ export default function Root() {
       <Body>
         <Suspense>
           <ErrorBoundary>
-            <Toaster />
+            <Toaster position="bottom-right" />
             <Routes>
               <FileRoutes />
             </Routes>

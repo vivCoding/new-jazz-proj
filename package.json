@@ -10,6 +10,8 @@
     "lint:fix": "eslint src --fix",
     "prettier": "prettier src --check",
     "prettier:fix": "prettier src --write",
+    "prisma:generate": "prisma generate dev",
+    "prisma:migrate": "prisma migrate dev",
     "postinstall": "prisma generate"
   },
   "dependencies": {
