@@ -9,6 +9,9 @@ export const getRefuelsFromCar = (carId: string) =>
     include: {
       car: true,
     },
+    orderBy: {
+      date: "asc",
+    },
   })
 
 export const addRefuel = (data: Omit<Refuel, "id" | "mpg" | "costPerMile">) => {

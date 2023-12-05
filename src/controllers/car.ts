@@ -19,11 +19,6 @@ export const getCarById = (carId: string) =>
     },
     include: {
       user: true,
-      refuels: {
-        orderBy: {
-          date: "asc",
-        },
-      },
     },
   })
 

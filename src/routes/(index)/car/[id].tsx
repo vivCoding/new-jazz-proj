@@ -1,7 +1,8 @@
 import type { Refuel } from "@prisma/client"
 import to from "await-to-js"
-import { For, Show, createSignal } from "solid-js"
-import { useParams, useRouteData } from "solid-start"
+import { For, Show, createEffect, createSignal } from "solid-js"
+import { refetchRouteData, useParams, useRouteData } from "solid-start"
+import { useSearchParams } from "solid-start/router"
 import { createServerAction$, createServerData$ } from "solid-start/server"
 import toast from "solid-toast"
 import Protected from "~/components/Protected"
@@ -9,27 +10,70 @@ import { getCarById } from "~/controllers/car"
 import {
   addRefuel as addRefuelDb,
   deleteRefuel as deleteRefuelDb,
+  getRefuelsFromCar,
 } from "~/controllers/refuel"
+
+enum FilterType {
+  ALL = "all",
+  ONE_MONTH = "oneMonth",
+  ONE_YEAR = "oneYear",
+  CUSTOM = "custom",
+}
+
+type SearchParamsType = {
+  filterType: FilterType
+  startDate?: string
+  endDate?: string
+}
 
 export function routeData() {
   const params = useParams()
+  const [searchParams] = useSearchParams<SearchParamsType>()
   return createServerData$(
-    async (id) => {
-      const [err, res] = await to(getCarById(id))
-      return { err, res }
+    async ({ params, searchParams }) => {
+      const { filterType, startDate, endDate } = searchParams
+      console.log("filter dates:", filterType, startDate, endDate)
+      const [err, car] = await to(getCarById(params.id))
+      if (err || !car) {
+        throw err ?? "no car"
+      }
+      switch (filterType) {
+        case FilterType.ALL:
+          // filterByDate()
+          break
+        case FilterType.ONE_MONTH:
+          // filterByDate(lastMonthStartDate, today)
+          break
+        case FilterType.ONE_YEAR:
+          // filterByDate(lastYearStartDate, today)
+          break
+        case FilterType.CUSTOM:
+          // filterByDate()
+          break
+        default:
+          break
+      }
+      const [err2, refuels] = await to(getRefuelsFromCar(params.id))
+      if (err2 || !refuels) {
+        throw err ?? "no refuels"
+      }
+      return { err, car, refuels }
     },
-    { key: () => params.id }
+    { key: () => ({ params, searchParams }) }
   )
 }
 
 export default function CarPage() {
-  const car = useRouteData<typeof routeData>()
+  const carData = useRouteData<typeof routeData>()
+  const [searchParams, setSearchParams] = useSearchParams<SearchParamsType>()
 
   const [adding, setAdding] = createSignal(false)
   const [newDate, setDate] = createSignal(new Date())
   const [newGallons, setGallons] = createSignal(0)
   const [newPrice, setPrice] = createSignal(0)
   const [newMilesDriven, setMilesDriven] = createSignal(0)
+
+  const [filterType, setFilterType] = createSignal<FilterType>(FilterType.ALL)
 
   const [addStatus, addNew] = createServerAction$(
     async (newRefuel: Omit<Refuel, "id" | "mpg" | "costPerMile">) => {
@@ -49,7 +93,7 @@ export default function CarPage() {
 
   const handleAddNewRefuel = async () => {
     await addNew({
-      carId: car()?.res?.id ?? "",
+      carId: carData()?.car.id ?? "",
       date: newDate(),
       gallons: newGallons(),
       gallonPrice: newPrice(),
@@ -83,21 +127,37 @@ export default function CarPage() {
     }
   }
 
-  if (car() && (car()?.err || !car()?.res)) {
+  if (carData() && (carData()?.err || !carData()?.car || !carData()?.refuels)) {
     toast.error("Could not load car and car refuel info 😭")
   } else {
-    car()?.res?.refuels.forEach((refuel) => {
+    carData()?.refuels.forEach((refuel) => {
       refuel.date = new Date(refuel.date)
     })
   }
+
+  createEffect(() => {
+    // don't refetch if no change
+    if (searchParams.filterType === filterType()) return
+    setSearchParams({
+      filterType: filterType(),
+    })
+    refetchRouteData()
+    if (filterType() === FilterType.CUSTOM) {
+      // pass
+    } else {
+      // pass
+    }
+  })
 
   return (
     <Protected>
       <main class="p-14 text-gray-700">
         <div class="flex flex-row items-center justify-between">
           <div>
-            <h1 class="text-5xl font-light">{car()?.res?.name}</h1>
-            <h3 class="mt-3 text-xl font-light">{car()?.res?.description}</h3>
+            <h1 class="text-5xl font-light">{carData()?.car?.name}</h1>
+            <h3 class="mt-3 text-xl font-light">
+              {carData()?.car?.description}
+            </h3>
           </div>
           <button
             class="block rounded bg-sky-600 px-3 py-2 text-white transition hover:bg-sky-400"
@@ -107,7 +167,22 @@ export default function CarPage() {
           </button>
         </div>
         <div class="mt-6">
-          <table class="w-full">
+          <div class="flex flex-row items-center">
+            <h3 class="ml-auto mr-2">Filter Date:</h3>
+            <select class="rounded p-1 text-sm">
+              <option onClick={() => setFilterType(FilterType.ALL)}>All</option>
+              <option onClick={() => setFilterType(FilterType.ONE_MONTH)}>
+                1 Month
+              </option>
+              <option onClick={() => setFilterType(FilterType.ONE_YEAR)}>
+                1 Year
+              </option>
+              <option onClick={() => setFilterType(FilterType.CUSTOM)}>
+                Custom
+              </option>
+            </select>
+          </div>
+          <table class="mt-2 w-full">
             <thead>
               <tr>
                 <th class="border-2 border-solid border-white bg-slate-300 p-2 font-normal">
@@ -128,10 +203,10 @@ export default function CarPage() {
                 <th class="border-2 border-solid border-white bg-slate-300 p-2 font-normal">
                   <h3>Cost/Mile</h3>
                 </th>
-                <th class="w-0"> </th>
+                <th class="w-10 bg-slate-300" />
               </tr>
             </thead>
-            <For each={car()?.res?.refuels}>
+            <For each={carData()?.refuels}>
               {({
                 id: refuelId,
                 date,
@@ -203,7 +278,7 @@ export default function CarPage() {
               )}
             </For>
           </table>
-          <Show when={car()?.res?.refuels.length === 0}>
+          <Show when={carData()?.refuels.length === 0}>
             <h3 class="mt-2 text-center text-xl font-light italic">
               No refuels
             </h3>
