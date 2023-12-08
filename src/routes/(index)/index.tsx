@@ -16,7 +16,7 @@ export default function Home() {
             onClick={() => signIn("google")}
             class="text-sky-600 hover:underline"
           >
-            Sign In
+            Sign in
           </button>{" "}
           to get started
         </p>

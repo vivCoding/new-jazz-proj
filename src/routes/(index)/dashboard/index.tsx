@@ -17,6 +17,7 @@ export function routeData() {
   return createServerData$(async (_, { request }) => {
     const session = await getSession(request, authOpts)
     const [err, res] = await to(getCarsFromUser(session?.user?.id ?? ""))
+    console.log("got", res)
     return { err, res }
   })
 }

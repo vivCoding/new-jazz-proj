@@ -1,9 +1,14 @@
+import { getSession } from "@auth/solid-start"
 import type { Refuel } from "@prisma/client"
 import to from "await-to-js"
 import { For, Show, createEffect, createSignal } from "solid-js"
 import { refetchRouteData, useParams, useRouteData } from "solid-start"
 import { useSearchParams } from "solid-start/router"
-import { createServerAction$, createServerData$ } from "solid-start/server"
+import {
+  createServerAction$,
+  createServerData$,
+  redirect,
+} from "solid-start/server"
 import toast from "solid-toast"
 import Protected from "~/components/Protected"
 import { getCarById } from "~/controllers/car"
@@ -12,6 +17,7 @@ import {
   deleteRefuel as deleteRefuelDb,
   getRefuelsFromCar,
 } from "~/controllers/refuel"
+import { authOpts } from "~/routes/api/auth/[...solidauth]"
 
 enum FilterType {
   ALL = "all",
@@ -30,33 +36,48 @@ export function routeData() {
   const params = useParams()
   const [searchParams] = useSearchParams<SearchParamsType>()
   return createServerData$(
-    async ({ params, searchParams }) => {
-      const { filterType, startDate, endDate } = searchParams
-      console.log("filter dates:", filterType, startDate, endDate)
+    async ({ params, searchParams }, { request }) => {
+      const session = await getSession(request, authOpts)
+
       const [err, car] = await to(getCarById(params.id))
-      if (err || !car) {
-        throw err ?? "no car"
+      if (err || !car) throw err ?? "no car"
+      // prevent other users from seeing car
+      if (!session || !session.user || car.userId !== session.user.id) {
+        throw redirect("/401")
       }
+      const {
+        filterType,
+        startDate: customDateStart,
+        endDate: customDateEnd,
+      } = searchParams
+      let startDate: Date | undefined = undefined
+      let endDate: Date | undefined = undefined
+
       switch (filterType) {
         case FilterType.ALL:
-          // filterByDate()
           break
         case FilterType.ONE_MONTH:
-          // filterByDate(lastMonthStartDate, today)
+          endDate = new Date()
+          startDate = new Date(new Date().setMonth(endDate.getMonth() - 1))
           break
         case FilterType.ONE_YEAR:
-          // filterByDate(lastYearStartDate, today)
+          endDate = new Date()
+          startDate = new Date(
+            new Date().setFullYear(endDate.getFullYear() - 1)
+          )
           break
         case FilterType.CUSTOM:
-          // filterByDate()
-          break
-        default:
+          if (customDateStart && customDateEnd) {
+            startDate = new Date(customDateStart)
+            endDate = new Date(customDateEnd)
+          }
           break
       }
-      const [err2, refuels] = await to(getRefuelsFromCar(params.id))
-      if (err2 || !refuels) {
-        throw err ?? "no refuels"
-      }
+
+      const [err2, refuels] = await to(
+        getRefuelsFromCar(params.id, startDate, endDate)
+      )
+      if (err2 || !refuels) throw err ?? "no refuels"
       return { err, car, refuels }
     },
     { key: () => ({ params, searchParams }) }
@@ -74,6 +95,11 @@ export default function CarPage() {
   const [newMilesDriven, setMilesDriven] = createSignal(0)
 
   const [filterType, setFilterType] = createSignal<FilterType>(FilterType.ALL)
+  const [customDateEnd, setCustomDateEnd] = createSignal(new Date())
+  const [customDateStart, setCustomDateStart] = createSignal(
+    // eslint-disable-next-line solid/reactivity
+    new Date(new Date().setMonth(customDateEnd().getMonth() - 1))
+  )
 
   const [addStatus, addNew] = createServerAction$(
     async (newRefuel: Omit<Refuel, "id" | "mpg" | "costPerMile">) => {
@@ -92,6 +118,7 @@ export default function CarPage() {
   )
 
   const handleAddNewRefuel = async () => {
+    console.log("ayo", new Date(), newDate().toISOString())
     await addNew({
       carId: carData()?.car.id ?? "",
       date: newDate(),
@@ -129,24 +156,28 @@ export default function CarPage() {
 
   if (carData() && (carData()?.err || !carData()?.car || !carData()?.refuels)) {
     toast.error("Could not load car and car refuel info 😭")
-  } else {
-    carData()?.refuels.forEach((refuel) => {
-      refuel.date = new Date(refuel.date)
-    })
   }
 
   createEffect(() => {
     // don't refetch if no change
-    if (searchParams.filterType === filterType()) return
+    // TODO fine grain to check if no change in custom date range
+    if (
+      searchParams.filterType === filterType() &&
+      searchParams.filterType !== FilterType.CUSTOM
+    )
+      return
     setSearchParams({
       filterType: filterType(),
+      startDate:
+        filterType() === FilterType.CUSTOM
+          ? customDateStart().toISOString()
+          : undefined,
+      endDate:
+        filterType() === FilterType.CUSTOM
+          ? customDateEnd().toISOString()
+          : undefined,
     })
     refetchRouteData()
-    if (filterType() === FilterType.CUSTOM) {
-      // pass
-    } else {
-      // pass
-    }
   })
 
   return (
@@ -169,7 +200,7 @@ export default function CarPage() {
         <div class="mt-6">
           <div class="flex flex-row items-center">
             <h3 class="ml-auto mr-2">Filter Date:</h3>
-            <select class="rounded p-1 text-sm">
+            <select class="rounded p-1 pl-3 text-sm">
               <option onClick={() => setFilterType(FilterType.ALL)}>All</option>
               <option onClick={() => setFilterType(FilterType.ONE_MONTH)}>
                 1 Month
@@ -181,6 +212,39 @@ export default function CarPage() {
                 Custom
               </option>
             </select>
+            <Show when={filterType() === FilterType.CUSTOM}>
+              <div class="ml-3 flex flex-row items-center">
+                <input
+                  type="date"
+                  class="block rounded border border-slate-400 p-1 text-sm font-light disabled:bg-slate-100 disabled:hover:cursor-not-allowed"
+                  value={customDateStart()
+                    .toLocaleDateString("en-ZA")
+                    .replaceAll("/", "-")}
+                  onChange={(e) => {
+                    setCustomDateStart(
+                      new Date(e.target.value.replaceAll("-", "/")) ??
+                        new Date()
+                    )
+                  }}
+                  disabled={addStatus.pending}
+                />
+                <span class="mx-2">-</span>
+                <input
+                  type="date"
+                  class="block rounded border border-slate-400 p-1 text-sm font-light disabled:bg-slate-100 disabled:hover:cursor-not-allowed"
+                  value={customDateEnd()
+                    .toLocaleDateString("en-ZA")
+                    .replaceAll("/", "-")}
+                  onChange={(e) => {
+                    setCustomDateEnd(
+                      new Date(e.target.value.replaceAll("-", "/")) ??
+                        new Date()
+                    )
+                  }}
+                  disabled={addStatus.pending}
+                />
+              </div>
+            </Show>
           </div>
           <table class="mt-2 w-full">
             <thead>
@@ -219,7 +283,9 @@ export default function CarPage() {
                 <>
                   <tr>
                     <td class=" border-2 border-gray-200 p-1">
-                      {new Date(date).toLocaleDateString()}
+                      {`${new Date(date).getUTCMonth() + 1}/${new Date(
+                        date
+                      ).getUTCDate()}/${new Date(date).getUTCFullYear()}`}
                     </td>
                     <td class=" border-2 border-gray-200 p-1">{gallonPrice}</td>
                     <td class=" border-2 border-gray-200 p-1">{gallons}</td>
@@ -301,13 +367,23 @@ export default function CarPage() {
                 <input
                   type="date"
                   class="mt-1 block w-full rounded border border-slate-400 p-1 text-sm font-light disabled:bg-slate-100 disabled:hover:cursor-not-allowed"
-                  value={newDate()
-                    .toLocaleDateString("en-ZA")
-                    .replaceAll("/", "-")}
+                  value={(() => {
+                    const x = newDate()
+                      .toLocaleDateString("en-ZA")
+                      .replaceAll("/", "-")
+                    console.log("yooo", x)
+                    return x
+                  })()}
                   onChange={(e) => {
                     setDate(
                       new Date(e.target.value.replaceAll("-", "/")) ??
                         new Date()
+                    )
+                    console.log(
+                      "got",
+                      e.target.value,
+                      newDate(),
+                      newDate().toISOString()
                     )
                   }}
                   disabled={addStatus.pending}
