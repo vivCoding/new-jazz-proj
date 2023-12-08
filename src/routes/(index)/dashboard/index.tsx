@@ -13,15 +13,6 @@ import { authOpts } from "~/routes/api/auth/[...solidauth]"
 import to from "await-to-js"
 import toast from "solid-toast"
 
-export function routeData() {
-  return createServerData$(async (_, { request }) => {
-    const session = await getSession(request, authOpts)
-    const [err, res] = await to(getCarsFromUser(session?.user?.id ?? ""))
-    console.log("got", res)
-    return { err, res }
-  })
-}
-
 export default function Dashboard() {
   const [adding, setAdding] = createSignal(false)
   const [newCarName, setNewCarName] = createSignal("")
@@ -215,4 +206,12 @@ export default function Dashboard() {
       </Show>
     </Protected>
   )
+}
+
+export function routeData() {
+  return createServerData$(async (_, { request }) => {
+    const session = await getSession(request, authOpts)
+    const [err, res] = await to(getCarsFromUser(session?.user?.id ?? ""))
+    return { err, res }
+  })
 }

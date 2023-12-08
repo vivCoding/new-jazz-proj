@@ -1,26 +1,17 @@
-import type { Refuel } from "@prisma/client"
+import type { PrismaPromise, Refuel } from "@prisma/client"
 import prisma from "~/util/store/dbConnect"
 
 export const getRefuelsFromCar = (
   carId: string,
   fromDate?: Date,
   endDate?: Date
-) =>
-  prisma.refuel.findMany({
-    where: {
-      carId,
-      date: {
-        lte: endDate,
-        gte: fromDate,
-      },
-    },
-    include: {
-      car: true,
-    },
-    orderBy: {
-      date: "asc",
-    },
-  })
+): PrismaPromise<Refuel[]> => {
+  if (fromDate && endDate) {
+    return prisma.$queryRaw`SELECT * FROM refuels WHERE "carId" = ${carId} AND ${fromDate} <= date AND date <= ${endDate} ORDER BY date`
+  } else {
+    return prisma.$queryRaw`SELECT * FROM refuels WHERE "carId" = ${carId} ORDER BY date`
+  }
+}
 
 export const addRefuel = (data: Omit<Refuel, "id" | "mpg" | "costPerMile">) => {
   const mpg = +(data.milesDriven / data.gallons).toFixed(4)
