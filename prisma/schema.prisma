@@ -67,7 +67,7 @@ model Car {
   user        User     @relation(fields: [userId], references: [id])
   refuels     Refuel[]
 
-  @@index([name])
+  @@index([userId, name])
   @@map("cars")
 }
 
@@ -82,6 +82,6 @@ model Refuel {
   carId       String   @db.Uuid
   car         Car      @relation(fields: [carId], references: [id])
 
-  @@index([date])
+  @@index([carId, date])
   @@map("refuels")
 }
