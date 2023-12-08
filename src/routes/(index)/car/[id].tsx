@@ -1,7 +1,14 @@
 import { getSession } from "@auth/solid-start"
 import type { Refuel } from "@prisma/client"
 import to from "await-to-js"
-import { For, Show, createEffect, createSignal } from "solid-js"
+import {
+  For,
+  Show,
+  createComputed,
+  createEffect,
+  createMemo,
+  createSignal,
+} from "solid-js"
 import { refetchRouteData, useParams, useRouteData } from "solid-start"
 import { useSearchParams } from "solid-start/router"
 import {
@@ -24,6 +31,12 @@ enum FilterType {
   ONE_MONTH = "oneMonth",
   ONE_YEAR = "oneYear",
   CUSTOM = "custom",
+}
+
+enum AggregationType {
+  AVG_PRICE_PER_GALLON = "avgPricePerGallon",
+  AVG_MPG = "avgMpg",
+  AVG_COST_PER_MILE = "avgCostPerMile",
 }
 
 type SearchParamsType = {
@@ -55,6 +68,42 @@ export default function CarPage() {
         new Date(new Date().setMonth(customDateEnd().getMonth() - 1))
   )
   const [loadingFilter, setLoadingFilter] = createSignal(false)
+
+  const [aggregationType, setAggregationType] = createSignal(
+    AggregationType.AVG_PRICE_PER_GALLON
+  )
+  const aggregateValue = createMemo(() => {
+    const refuels = carData()?.refuels
+    if (!refuels || refuels.length === 0) {
+      return 0
+    }
+    let totalMiles = 0
+    let totalGallons = 0
+    let totalPrice = 0
+    switch (aggregationType()) {
+      case AggregationType.AVG_PRICE_PER_GALLON:
+        return +(
+          refuels.reduce((prev, curr) => prev + curr.gallonPrice, 0) /
+          refuels.length
+        ).toFixed(2)
+      case AggregationType.AVG_MPG:
+        refuels.forEach((r) => {
+          totalMiles += r.milesDriven
+          totalGallons += r.gallons
+        })
+        if (totalGallons === 0) totalGallons = 1
+        return +(totalMiles / totalGallons).toFixed(2)
+      case AggregationType.AVG_COST_PER_MILE:
+        refuels.forEach((r) => {
+          totalPrice += r.gallonPrice * r.gallons
+          totalMiles += r.milesDriven
+        })
+        if (totalMiles === 0) totalMiles = 1
+        return +(totalPrice / totalMiles).toFixed(2)
+      default:
+        return 0
+    }
+  }, 0)
 
   const [addStatus, addNew] = createServerAction$(
     async (newRefuel: Omit<Refuel, "id" | "mpg" | "costPerMile">) => {
@@ -138,32 +187,79 @@ export default function CarPage() {
   return (
     <Protected>
       <main class="p-14 text-gray-700">
-        <div class="flex flex-row items-center justify-between">
-          <div>
+        <div>
+          <div class="flex flex-row items-center justify-between">
             <h1 class="text-5xl font-light">{carData()?.car?.name}</h1>
-            <h3 class="mt-3 text-xl font-light">
-              {carData()?.car?.description}
-            </h3>
+            <button
+              class="block rounded bg-sky-600 px-3 py-2 text-white transition hover:bg-sky-400"
+              onClick={() => (setAdding(true), clearInputs())}
+            >
+              Add Refuel Info
+            </button>
           </div>
-          <button
-            class="block rounded bg-sky-600 px-3 py-2 text-white transition hover:bg-sky-400"
-            onClick={() => (setAdding(true), clearInputs())}
-          >
-            Add Refuel Info
-          </button>
+          <h3 class="mt-3 text-xl font-light">{carData()?.car?.description}</h3>
         </div>
         <div class="mt-6">
           <div class="flex flex-row items-center">
-            <h3 class="ml-auto mr-2">Filter Date:</h3>
             <select class="rounded p-1 px-2 text-sm">
-              <option onClick={() => setFilterType(FilterType.ALL)}>All</option>
-              <option onClick={() => setFilterType(FilterType.ONE_MONTH)}>
+              <option
+                selected={
+                  aggregationType() === AggregationType.AVG_PRICE_PER_GALLON
+                }
+                onClick={() =>
+                  setAggregationType(AggregationType.AVG_PRICE_PER_GALLON)
+                }
+              >
+                Average Price/Gallon
+              </option>
+              <option
+                selected={aggregationType() === AggregationType.AVG_MPG}
+                onClick={() => setAggregationType(AggregationType.AVG_MPG)}
+              >
+                Average MPG
+              </option>
+              <option
+                selected={
+                  aggregationType() === AggregationType.AVG_COST_PER_MILE
+                }
+                onClick={() =>
+                  setAggregationType(AggregationType.AVG_COST_PER_MILE)
+                }
+              >
+                Average Cost/Mile
+              </option>
+            </select>
+            <span class="ml-1">:</span>
+            <p class="ml-2">
+              {aggregationType() === AggregationType.AVG_PRICE_PER_GALLON ||
+              aggregationType() === AggregationType.AVG_COST_PER_MILE
+                ? `$${aggregateValue()}`
+                : `${aggregateValue()} MPG`}
+            </p>
+            <label class="ml-auto mr-2">Filter Date:</label>
+            <select class="rounded p-1 px-2 text-sm">
+              <option
+                selected={filterType() === FilterType.ALL}
+                onClick={() => setFilterType(FilterType.ALL)}
+              >
+                All
+              </option>
+              <option
+                selected={filterType() === FilterType.ONE_MONTH}
+                onClick={() => setFilterType(FilterType.ONE_MONTH)}
+              >
                 1 Month
               </option>
-              <option onClick={() => setFilterType(FilterType.ONE_YEAR)}>
+              <option
+                selected={filterType() === FilterType.ONE_YEAR}
+                onClick={() => setFilterType(FilterType.ONE_YEAR)}
+              >
                 1 Year
               </option>
-              <option onClick={() => setFilterType(FilterType.CUSTOM)}>
+              <option
+                selected={filterType() === FilterType.CUSTOM}
+                onClick={() => setFilterType(FilterType.CUSTOM)}
+              >
                 Custom
               </option>
             </select>
@@ -308,8 +404,10 @@ export default function CarPage() {
                 </For>
               </Show>
             </table>
-            <Show when={carData()?.refuels.length === 0}>
-              <h3 class="text-center text-xl font-light italic">No refuels</h3>
+            <Show when={carData()?.refuels.length === 0 && !loadingFilter()}>
+              <h3 class="mt-3 text-center text-xl font-light italic">
+                No refuels
+              </h3>
             </Show>
             <Show when={loadingFilter()}>
               <svg
