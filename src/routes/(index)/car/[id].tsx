@@ -85,21 +85,21 @@ export default function CarPage() {
         return +(
           refuels.reduce((prev, curr) => prev + curr.gallonPrice, 0) /
           refuels.length
-        ).toFixed(2)
+        ).toFixed(4)
       case AggregationType.AVG_MPG:
         refuels.forEach((r) => {
           totalMiles += r.milesDriven
           totalGallons += r.gallons
         })
         if (totalGallons === 0) totalGallons = 1
-        return +(totalMiles / totalGallons).toFixed(2)
+        return +(totalMiles / totalGallons).toFixed(4)
       case AggregationType.AVG_COST_PER_MILE:
         refuels.forEach((r) => {
           totalPrice += r.gallonPrice * r.gallons
           totalMiles += r.milesDriven
         })
         if (totalMiles === 0) totalMiles = 1
-        return +(totalPrice / totalMiles).toFixed(2)
+        return +(totalPrice / totalMiles).toFixed(4)
       default:
         return 0
     }
