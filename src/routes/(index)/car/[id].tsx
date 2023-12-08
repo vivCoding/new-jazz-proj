@@ -1,14 +1,8 @@
+// TODO break into smaller components lmao
 import { getSession } from "@auth/solid-start"
 import type { Refuel } from "@prisma/client"
 import to from "await-to-js"
-import {
-  For,
-  Show,
-  createComputed,
-  createEffect,
-  createMemo,
-  createSignal,
-} from "solid-js"
+import { For, Show, createEffect, createMemo, createSignal } from "solid-js"
 import { refetchRouteData, useParams, useRouteData } from "solid-start"
 import { useSearchParams } from "solid-start/router"
 import {
