@@ -19,6 +19,7 @@ import {
   getRefuelsFromCar,
 } from "~/controllers/refuel"
 import { authOpts } from "~/routes/api/auth/[...solidauth]"
+import { normalizeDate } from "~/util/dates"
 
 enum FilterType {
   ALL = "all",
@@ -44,7 +45,7 @@ export default function CarPage() {
   const [searchParams, setSearchParams] = useSearchParams<SearchParamsType>()
 
   const [adding, setAdding] = createSignal(false)
-  const [newDate, setDate] = createSignal(new Date())
+  const [newDate, setDate] = createSignal(normalizeDate(new Date()))
   const [newGallons, setGallons] = createSignal(0)
   const [newPrice, setPrice] = createSignal(0)
   const [newMilesDriven, setMilesDriven] = createSignal(0)
@@ -53,14 +54,19 @@ export default function CarPage() {
     searchParams.filterType ?? FilterType.ALL
   )
   const [customDateEnd, setCustomDateEnd] = createSignal(
-    searchParams.endDate ? new Date(searchParams.endDate) : new Date()
+    searchParams.endDate
+      ? normalizeDate(new Date(searchParams.endDate))
+      : normalizeDate(new Date())
   )
   const [customDateStart, setCustomDateStart] = createSignal(
     searchParams.startDate
-      ? new Date(searchParams.startDate)
-      : // eslint-disable-next-line solid/reactivity
-        new Date(new Date().setMonth(customDateEnd().getMonth() - 1))
+      ? normalizeDate(new Date(searchParams.startDate))
+      : normalizeDate(
+          // eslint-disable-next-line solid/reactivity
+          new Date(new Date().setMonth(customDateEnd().getMonth() - 1))
+        )
   )
+
   const [loadingFilter, setLoadingFilter] = createSignal(false)
 
   const [aggregationType, setAggregationType] = createSignal(
@@ -262,13 +268,12 @@ export default function CarPage() {
                 <input
                   type="date"
                   class="block rounded border border-slate-400 p-1 text-sm font-light disabled:bg-slate-100 disabled:hover:cursor-not-allowed"
-                  value={customDateStart()
-                    .toLocaleDateString("en-ZA")
-                    .replaceAll("/", "-")}
+                  value={customDateStart().toISOString().substring(0, 10)}
                   onChange={(e) => {
                     setCustomDateStart(
-                      new Date(e.target.value.replaceAll("-", "/")) ??
-                        new Date()
+                      normalizeDate(
+                        new Date(e.target.value.replaceAll("-", "/"))
+                      )
                     )
                   }}
                   disabled={addStatus.pending}
@@ -277,13 +282,12 @@ export default function CarPage() {
                 <input
                   type="date"
                   class="block rounded border border-slate-400 p-1 text-sm font-light disabled:bg-slate-100 disabled:hover:cursor-not-allowed"
-                  value={customDateEnd()
-                    .toLocaleDateString("en-ZA")
-                    .replaceAll("/", "-")}
+                  value={customDateEnd().toISOString().substring(0, 10)}
                   onChange={(e) => {
                     setCustomDateEnd(
-                      new Date(e.target.value.replaceAll("-", "/")) ??
-                        new Date()
+                      normalizeDate(
+                        new Date(e.target.value.replaceAll("-", "/"))
+                      )
                     )
                   }}
                   disabled={addStatus.pending}
@@ -330,9 +334,12 @@ export default function CarPage() {
                     <>
                       <tr>
                         <td class=" border-2 border-gray-200 p-1">
-                          {`${new Date(date).getUTCMonth() + 1}/${new Date(
-                            date
-                          ).getUTCDate()}/${new Date(date).getUTCFullYear()}`}
+                          {`${normalizeDate(new Date(date))
+                            .toISOString()
+                            .substring(5, 10)
+                            .replaceAll("-", "/")}/${normalizeDate(
+                            new Date(date)
+                          ).getUTCFullYear()}`}
                         </td>
                         <td class=" border-2 border-gray-200 p-1">
                           {gallonPrice}
@@ -437,13 +444,12 @@ export default function CarPage() {
                 <input
                   type="date"
                   class="mt-1 block w-full rounded border border-slate-400 p-1 text-sm font-light disabled:bg-slate-100 disabled:hover:cursor-not-allowed"
-                  value={newDate()
-                    .toLocaleDateString("en-ZA")
-                    .replaceAll("/", "-")}
+                  value={newDate().toISOString().substring(0, 10)}
                   onChange={(e) => {
                     setDate(
-                      new Date(e.target.value.replaceAll("-", "/")) ??
-                        new Date()
+                      normalizeDate(
+                        new Date(e.target.value.replaceAll("-", "/"))
+                      )
                     )
                   }}
                   disabled={addStatus.pending}
