@@ -14,17 +14,14 @@ export const getRefuelsFromCar = (
 }
 
 export const addRefuel = (data: Omit<Refuel, "id" | "mpg" | "costPerMile">) => {
-  const mpg = +(data.milesDriven / data.gallons).toFixed(4)
-  const costPerMile = +(
-    (data.gallonPrice * data.gallons) /
-    data.milesDriven
-  ).toFixed(4)
+  const mpg =
+    data.gallons === 0 ? 0 : +(data.milesDriven / data.gallons).toFixed(4)
+  const costPerMile =
+    data.milesDriven === 0
+      ? 0
+      : +((data.gallonPrice * data.gallons) / data.milesDriven).toFixed(4)
   // prepared stmt
-  return prisma.$executeRaw`INSERT INTO refuels (date, gallons, "gallonPrice", "milesDriven", mpg, "costPerMile", "carId") VALUES (${
-    data.date
-  }, ${data.gallons}, ${data.gallonPrice}, ${data.milesDriven}, ${
-    isNaN(mpg) ? 0 : mpg
-  }, ${isNaN(costPerMile) ? 0 : costPerMile}, ${data.carId})`
+  return prisma.$executeRaw`INSERT INTO refuels (date, gallons, "gallonPrice", "milesDriven", mpg, "costPerMile", "carId") VALUES (${data.date}, ${data.gallons}, ${data.gallonPrice}, ${data.milesDriven}, ${mpg}, ${costPerMile}, ${data.carId})`
 }
 
 export const deleteRefuel = (refuelId: string) =>
