@@ -27,9 +27,15 @@ export const addCar = (data: Omit<Car, "id">) =>
     data,
   })
 
-export const deleteCar = (carId: string) =>
-  prisma.car.delete({
+export const deleteCar = async (carId: string) => {
+  await prisma.refuel.deleteMany({
+    where: {
+      carId,
+    },
+  })
+  await prisma.car.delete({
     where: {
       id: carId,
     },
   })
+}

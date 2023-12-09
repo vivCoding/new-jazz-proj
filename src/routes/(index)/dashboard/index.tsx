@@ -35,7 +35,7 @@ export default function Dashboard() {
     async (carId: string) => {
       console.log("deleting a car")
       const [err, res] = await to(deleteCarDb(carId))
-      if (err || !res) throw err
+      if (err) throw err
     }
   )
 
